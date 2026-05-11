@@ -41,7 +41,7 @@ All seven containers run on a shared Docker network. Grafana is pre-provisioned 
 **Prerequisites:** Docker Desktop running.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/observability-lab.git
+git clone https://github.com/Nithyareddy06/observability-lab.git
 cd observability-lab
 docker compose up -d
 ```
