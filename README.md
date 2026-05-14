@@ -7,7 +7,35 @@ It demonstrates the full **three pillars of observability** — metrics, logs, a
 ![Grafana dashboard](docs/observability-screenshots/grafana-observability.png)
 
 ---
+## Custom RED dashboard
 
+Beyond the upstream lab dashboards, I built a custom **RED dashboard** from scratch using PromQL — Rate, Errors, and Duration are the three metrics every SRE watches first when judging a service's health.
+
+![RED dashboard](docs/observability-screenshots/red-dashboard.png)
+
+### What each panel computes
+
+**Rate** — total requests per second, summed across all routes and methods:
+```promql
+sum(rate(mythical_request_times_count[1m]))
+```
+
+**Errors** — percentage of requests returning a 5xx response:
+```promql
+sum(rate(mythical_request_times_count{status=~"5.."}[1m]))
+  / sum(rate(mythical_request_times_count[1m])) * 100
+```
+
+**Duration** — 95th percentile latency from the request-times histogram:
+```promql
+histogram_quantile(0.95, sum(rate(mythical_request_times_bucket[5m])) by (le))
+```
+
+### Dashboard as code
+
+The full dashboard is committed at [`grafana/dashboards-custom/red-dashboard.json`](grafana/dashboards-custom/red-dashboard.json), so anyone cloning the repo can re-import it without rebuilding panels by hand.
+
+---
 ## What's in the stack
 
 | Component | Role | Port |
@@ -96,7 +124,8 @@ docker compose down -v
 
 ## Next steps I'm planning
 
-- Add a custom dashboard tracking RED (Rate, Errors, Duration) for the sample app
-- Wire up Alertmanager with a sample alert (e.g. error rate > 5%)
-- Containerize a second app and demonstrate cross-service tracing
-- Migrate the stack to a `kind` Kubernetes cluster using Helm
+- ~~Add a custom dashboard tracking RED (Rate, Errors, Duration) for the sample app~~ ✅ done
+- Wire up Alertmanager with a sample alert (e.g. error rate > 5%) and route to a webhook
+- Investigate the Duration panel — p95 currently displays as hours; suggests histogram bucket boundaries need calibration
+- Add a second microservice and demonstrate cross-service distributed tracing in Tempo
+- Ship metrics to AWS Managed Prometheus for hybrid local-and-cloud observability
